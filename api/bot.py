@@ -1,25 +1,13 @@
 import asyncio
-import os
 from datetime import datetime
 
-import django
 from aiogram import Bot, Dispatcher, types
 from aiogram.filters import Command
+from asgiref.sync import sync_to_async
 from decouple import config
 
-from api.services import flow_get_info
-
-# Укажите путь к вашему файлу настроек
-os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'config.settings')
-
-# Инициализируйте Django
-django.setup()
-
-# Теперь можно импортировать модели
 from api.models import WhitelistedUser
-
-# Получаем список значений id_telegram
-WITHE_LIST = list(WhitelistedUser.objects.values_list('telegram_id', flat=True))
+from api.services import flow_get_info
 
 # Токен бота
 BOT_TOKEN = config('TELEGRAM_TOKEN')
@@ -32,7 +20,8 @@ dp = Dispatcher()
 @dp.message(Command(commands=['start']))
 async def send_welcome(message: types.Message):
     """ Приветствие при старте бота """
-    if message.from_user.id in WITHE_LIST:
+    withe_list = await get_whitelisted_list()
+    if message.from_user.id in withe_list:
         await message.answer("Добро пожаловать! "
                              "Отправьте мне IMEI вашего устройства "
                              "для проверки.")
@@ -43,7 +32,8 @@ async def send_welcome(message: types.Message):
 @dp.message()
 async def handle_imei(message: types.Message):
     """ Запрос на проверку IMEI """
-    if message.from_user.id not in WITHE_LIST:
+    withe_list = await get_whitelisted_list()
+    if message.from_user.id not in withe_list:
         await message.answer("Извините, у вас нет доступа к этому боту.")
         return
 
@@ -55,7 +45,7 @@ async def handle_imei(message: types.Message):
 
     await message.answer("Проверяю IMEI, пожалуйста подождите...")
 
-    check = flow_get_info(imei)
+    check = await sync_to_async(flow_get_info)(imei)
     if check != {'failure': 'Ошибка запроса'}:
         await message.answer(format_response(check['properties']))
     else:
@@ -104,8 +94,10 @@ def format_response(data):
 
     # Обработка дат
     def format_date(timestamp):
+        """ Форматирование секунд в datetime """
         try:
-            return datetime.fromtimestamp(int(timestamp)).strftime("%d.%m.%Y %H:%M:%S")
+            return (datetime.fromtimestamp(int(timestamp)).
+                    strftime("%d.%m.%Y %H:%M:%S"))
         except (ValueError, TypeError):
             return 'N/A'
 
@@ -126,6 +118,12 @@ def format_response(data):
         f"Дата активации: {format_date(data.get('activationDate'))}\n"
     )
     return message
+
+
+@sync_to_async
+def get_whitelisted_list():
+    """Получение списка разрешённых пользователей."""
+    return list(WhitelistedUser.objects.values_list('telegram_id', flat=True))
 
 
 async def main():
