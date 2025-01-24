@@ -9,6 +9,7 @@ https://docs.djangoproject.com/en/5.1/topics/settings/
 For the full list of settings and their values, see
 https://docs.djangoproject.com/en/5.1/ref/settings/
 """
+from datetime import timedelta
 from pathlib import Path
 
 from decouple import config
@@ -125,6 +126,11 @@ STATIC_URL = 'static/'
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
+SIMPLE_JWT = {
+    "ACCESS_TOKEN_LIFETIME": timedelta(minutes=15),
+    "REFRESH_TOKEN_LIFETIME": timedelta(days=1),
+}
+
 # Настройки DRF и JWT
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': (
@@ -135,18 +141,15 @@ REST_FRAMEWORK = {
     ),
 }
 
-# Настройки Celery
-CELERY_BROKER_URL = config('CELERY_BROKER_URL')
-CELERY_RESULT_BACKEND = config('CELERY_RESULT_BACKEND')
-CELERY_BROKER_CONNECTION_RETRY_ON_STARTUP = True
-CELERY_TASK_TRACK_STARTED = config('CELERY_TASK_TRACK_STARTED')
-
 IMEICHECK_SANDBOX_TOKEN = config('IMEICHECK_SANDBOX_TOKEN')
 IMEICHECK_LIVE_TOKEN = config('IMEICHECK_LIVE_TOKEN')
-IMEICHECK_API_URL = config('IMEICHECK_API_URL')
 
 CORS_ALLOWED_ORIGINS_1 = config('CORS_ALLOWED_ORIGINS_1')
 CORS_ALLOWED_ORIGINS_2 = config('CORS_ALLOWED_ORIGINS_2')
 
 CSRF_TRUSTED_ORIGINS_1 = config('CSRF_TRUSTED_ORIGINS_1')
 CSRF_TRUSTED_ORIGINS_2 = config('CSRF_TRUSTED_ORIGINS_2')
+
+API_TOKEN = config('API_TOKEN')
+TELEGRAM_URL = config('TELEGRAM_URL')
+TELEGRAM_TOKEN = config('TELEGRAM_TOKEN')

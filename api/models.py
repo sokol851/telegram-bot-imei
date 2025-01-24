@@ -2,7 +2,7 @@ from django.db import models
 
 
 class WhitelistedUser(models.Model):
-    """ Модель белого листа """
+    """ Модель белого листа для Telegram """
     telegram_id = models.BigIntegerField(unique=True,
                                          verbose_name='Телеграм ИД')
     created_at = models.DateTimeField(auto_now_add=True,
@@ -13,4 +13,4 @@ class WhitelistedUser(models.Model):
         verbose_name_plural = 'Белый лист'
 
     def __str__(self):
-        return self.telegram_id
+        return str(self.telegram_id)
