@@ -1,5 +1,5 @@
+from drf_spectacular.utils import extend_schema
 from rest_framework import status
-from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
@@ -9,9 +9,10 @@ from .services import flow_get_info
 
 class CheckIMEIView(APIView):
     """ Представление для проверки IMEI """
-    permission_classes = [AllowAny]  # Разрешаем любые запросы
-    authentication_classes = []
 
+    @extend_schema(request=IMEICheckSerializer, responses={
+        200: IMEICheckSerializer
+    }, summary='Запрос на проверку IMEI')
     def post(self, request):
         serializer = IMEICheckSerializer(data=request.data)
         if serializer.is_valid():
